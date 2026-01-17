@@ -84,3 +84,7 @@ The implementation will be done step by step, focusing on one component at a tim
 
 ## Tradeoffs & Future Improvements
 > TBD: Note intentional scope cuts (no diarization, no DB, minimal UI) + possible next steps.
+- Whisper transcription relies on the OpenAI API and requires active billing.
+  During development, API quota limitations may result in 429 errors.
+  The system handles this gracefully by returning a clear 503 response.
+  End-to-end testing with real transcripts can be enabled later by activating billing.
