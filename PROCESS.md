@@ -54,6 +54,8 @@ The implementation will be done step by step, focusing on one component at a tim
 
 ## Prompting Strategy
 > TBD: Define a system prompt
+- Several prompt styles were explored, including schema-first prompting and strict extraction rules. 
+The final prompt whill be chosen for its balance between clarity, robustness, and minimal hallucination, while maintaining a professional, human-readable tone.
 > TBD: Define the JSON schema for:
 - summary
 - participants (best-effort)
@@ -64,6 +66,7 @@ The implementation will be done step by step, focusing on one component at a tim
 
 ## Using AI During Development
 > TBD: Document where AI tools were used (API usage, prompt iterations) + example prompts.
+- Used AI to generate diverse sample meeting transcripts (clean, mixed, and messy) in order to validate the robustness of the summarization prompts and structured output.
 
 ---
 

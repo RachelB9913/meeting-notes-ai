@@ -1,6 +1,11 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from pathlib import Path
 import uuid
+from pydantic import BaseModel
+
+from app.schemas.meeting_summary import MeetingSummary
+from app.services.openai_summary_service import summarize_transcript_with_openai
+
 
 app = FastAPI(title="Meeting Notes AI")
 
@@ -8,6 +13,10 @@ UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok = True)
 
 ALLOWED_EXTENSIONS = {".mp3", ".wav", ".m4a"}
+
+class SummarizeRequest(BaseModel):
+    transcript: str
+
 
 @app.get("/health")
 def health_check():
@@ -44,3 +53,12 @@ async def transcribe_audio(file: UploadFile = File(...)):
         "saved_filename": saved_name,
         "transcript": transcript,
     }
+
+
+@app.post("/summarize", response_model=MeetingSummary)
+def summarize(req: SummarizeRequest):
+    try:
+        data = summarize_transcript_with_openai(req.transcript)
+        return MeetingSummary.model_validate(data)
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e))
