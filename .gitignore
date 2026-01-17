@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+venv/
+.venv/
+.history
+
+# FastAPI / local runs
+*.log
+
+# Node / Frontend
+node_modules/
+dist/
+build/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Audio files / uploads
+uploads/
+*.wav
+*.mp3
+
