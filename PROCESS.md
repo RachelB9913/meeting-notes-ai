@@ -76,7 +76,7 @@ The final prompt whill be chosen for its balance between clarity, robustness, an
 ---
 
 ## Time Spent
-- Planning and design: TBD
+- Planning and design: ~50 min
 - Backend development: TBD
 - Frontend development: TBD
 - Documentation and polishing: TBD
