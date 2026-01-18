@@ -50,6 +50,17 @@ The implementation will be done step by step, focusing on one component at a tim
 6. Implement Word (.docx) export functionality.
 7. Perform final refinements, error handling, and documentation updates.
 
+### Word Export (DOCX)
+To make the output more user-friendly and closer to a real-world product, I added an optional Word (.docx) export step at the end of the processing pipeline.
+
+The export is based directly on the structured JSON output returned by the LLM (meeting summary, participants, decisions, and action items), ensuring a single source of truth and avoiding duplicated logic.
+
+The implementation is isolated in a dedicated service (`word_export_service`), following separation of concerns: the service is responsible only for rendering a document from validated data, while the route layer handles HTTP concerns and file streaming.
+
+The export can be triggered through the `/process` endpoint using an `output=docx` query parameter, allowing the same pipeline to return either JSON (for UI display) or a downloadable Word file.
+
+This was my first time using the `python-docx` library. I intentionally kept the implementation minimal and focused on structure and readability rather than advanced styling, as the main goal of the project is system design and AI integration rather than document formatting.
+
 ---
 
 ## Prompting Strategy
