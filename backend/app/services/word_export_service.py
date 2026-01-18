@@ -21,6 +21,7 @@ class WordExportMetadata:
 
 def build_docx_from_summary(
     summary: MeetingSummary,
+    transcript: str | None,
     meta: WordExportMetadata,
 ) -> bytes:
     doc = Document()
