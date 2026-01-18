@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from dotenv import load_dotenv
+import logging
 
 from app.routes.health import router as health_router
 from app.routes.transcribe import router as transcribe_router
@@ -8,7 +9,10 @@ from app.routes.process import router as process_router
 from app.routes.export import router as export_router
 
 load_dotenv()
-
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s"
+)
 
 def create_app() -> FastAPI:
     app = FastAPI(title="Meeting Notes AI")
