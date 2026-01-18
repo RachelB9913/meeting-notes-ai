@@ -11,7 +11,7 @@ from app.schemas.meeting_summary import MeetingSummary
 from app.services.whisper_service import transcribe_with_whisper
 from app.services.openai_summary_service import summarize_transcript_with_openai
 from app.services.claude_summary_service import summarize_transcript_with_claude
-from app.services.word_export_service import build_meeting_docx, WordExportMetadata
+from app.services.word_export_service import build_docx_from_summary, WordExportMetadata
 
 router = APIRouter()
 
@@ -48,7 +48,7 @@ def process_audio(
                 llm_provider=llm_provider,
                 generated_at=datetime.now(timezone.utc),
             )
-            docx_bytes = build_meeting_docx(summary=summary, transcript=transcript, meta=meta)
+            docx_bytes = build_docx_from_summary(summary=summary, transcript=transcript, meta=meta)
             headers = {"Content-Disposition": 'attachment; filename="meeting-notes.docx"'}
             return StreamingResponse(
                 BytesIO(docx_bytes),
