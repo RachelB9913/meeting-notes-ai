@@ -9,6 +9,9 @@ from app.services.claude_summary_service import summarize_transcript_with_claude
 
 
 from dotenv import load_dotenv
+from dotenv import load_dotenv
+from app.services.whisper_service import transcribe_with_whisper
+
 load_dotenv()
 
 app = FastAPI(title="Meeting Notes AI")
@@ -40,7 +43,7 @@ async def transcribe_audio(file: UploadFile = File(...)):
             detail=f"Unsupported file type: {ext}. Allowed: {sorted(ALLOWED_EXTENSIONS)}",
         )
 
-    saved_name = f"{uuid.uuid4().hex}{ext}"
+    saved_name = f"{uuid.uuid4().hex}{ext}"  # to avoid collisions and prevent relying on user-provided file names. The original filename is kept only for reference.
     saved_path = UPLOAD_DIR / saved_name
 
     content = await file.read()
@@ -49,8 +52,10 @@ async def transcribe_audio(file: UploadFile = File(...)):
     
     saved_path.write_bytes(content)
 
-    # Placeholder transcription for now
-    transcript = "TRANSCRIPTION_PLACEHOLDER"
+    try:
+        transcript = transcribe_with_whisper(str(saved_path))
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e))
 
     return{
         "original_filename": file.filename,
