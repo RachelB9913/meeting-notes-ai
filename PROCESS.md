@@ -72,7 +72,8 @@ The final prompt whill be chosen for its balance between clarity, robustness, an
 
 ## Issues & Resolutions
 > TBD: Track issues encountered and resolutions.
-
+- Handling multi-line transcripts in JSON requests:
+  Multi-line transcript inputs initially caused JSON parsing errors (422 Unprocessable Content). This was resolved by requiring JSON-safe newline escaping (`\n`) for all multi-line transcript inputs, ensuring compatibility with FastAPI request parsing and API-based clients such as Swagger and curl.
 ---
 
 ## Time Spent
