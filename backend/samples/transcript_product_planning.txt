@@ -1,0 +1,8 @@
+[00:00] Sarah (Product): Thanks everyone for joining. The goal today is to align on priorities for Q2.
+[00:08] Tom (Engineering): From engineering side, the biggest risk is performance. We need at least two weeks to optimize before release.
+[00:18] Maya (Design): I agree. Also, the onboarding flow still feels heavy. We should simplify it.
+[00:28] Sarah (Product): Decision: For Q2, performance improvements are the top priority, followed by onboarding simplification.
+[00:40] Tom (Engineering): Action item: I will prepare a performance optimization plan by next Wednesday.
+[00:48] Maya (Design): Action item: I’ll propose a simplified onboarding flow by the end of the week.
+[00:55] Sarah (Product): Great. Anything else?
+[01:00] Tom (Engineering): No, that covers it.

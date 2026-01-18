@@ -1,0 +1,8 @@
+[00:00] Lina (HR): Hi everyone. This is our monthly team sync.
+[00:06] Lina (HR): First topic is workload. Several people mentioned burnout in the last survey.
+[00:15] Alex: Yes, the last sprint was intense. Deadlines were very tight.
+[00:22] Lina (HR): Decision: Managers will review sprint capacity and reduce scope where possible.
+[00:32] Lina (HR): Action item: I will schedule one-on-one check-ins with each team member over the next two weeks.
+[00:40] Alex: That would be helpful.
+[00:44] Lina (HR): Second topic is remote work. We will keep the current hybrid policy.
+[00:52] Lina (HR): Ok, thanks everyone.
