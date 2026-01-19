@@ -55,6 +55,9 @@ function App() {
   const [exportLoading, setExportLoading] = useState(false);
   const [hoverButton, setHoverButton] = useState(null);
 
+  const MAX_AUDIO_MB = 25;
+  const isFileTooLarge = file && file.size > MAX_AUDIO_MB * 1024 * 1024;
+
   const fileMeta = useMemo(() => {
     if (!file) return null;
     return {
@@ -263,6 +266,13 @@ function App() {
             <div><strong>Size:</strong> {fileMeta.size}</div>
             <div><strong>Type:</strong> {fileMeta.type}</div>
 
+            {isFileTooLarge ? (
+              <p style={{ marginTop: "0.5rem", color: "#b00020", fontSize: 14 }}>
+                ⚠️ Audio file is larger than {MAX_AUDIO_MB} MB.  
+                Please upload a shorter file or convert it to MP3/WAV.
+              </p>
+            ) : null}
+
             <button
               type="button"
               onClick={clearFile}
@@ -340,7 +350,7 @@ function App() {
         <button
           type="button"
           onClick={onProcessClick}
-          disabled={!file || loading}
+          disabled={!file || loading || isFileTooLarge}
           {...bindPressEvents("process")}
           style={getButtonStyle("process", {
             padding: "0.6rem 1.1rem",
