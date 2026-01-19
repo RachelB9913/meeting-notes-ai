@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from time import time
 
 from app.config import UPLOAD_DIR, ALLOWED_EXTENSIONS
+from app.config import MAX_AUDIO_SIZE_BYTES, MAX_AUDIO_SIZE_MB
 from app.schemas.meeting_summary import MeetingSummary
 from app.services.whisper_service import transcribe_with_whisper
 from app.services.openai_summary_service import summarize_transcript_with_openai
@@ -29,6 +30,20 @@ def process_audio(
     logger.info("Process started | file=%s | llm=%s | output=%s",
                 file.filename, llm_provider, output)
     
+    if file.size and file.size > MAX_AUDIO_SIZE_BYTES:
+        logger.warning(
+            "Audio file too large",
+            extra={"size_bytes": file.size, "max_bytes": MAX_AUDIO_SIZE_BYTES}
+        )
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"Audio file is too large ({file.size / (1024*1024):.1f} MB). "
+                f"Maximum supported size is {MAX_AUDIO_SIZE_MB} MB. "
+                "Please upload a shorter file or convert it to MP3/WAV."
+            )
+        )
+
     try:
         if not file.filename:
             raise HTTPException(status_code=400, detail="Missing filename")
