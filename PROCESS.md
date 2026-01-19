@@ -184,22 +184,28 @@ Core logic, data flow, validation, and architectural decisions were implemented 
 Here are some of the issues encountered during development:
 
 #### Large Audio Files Causing Transcription Failures
-- Issue: Transcription requests failed for large audio files (≈50MB) with 400/500 errors.
-- Root Cause: External transcription provider enforces file size and duration limits.
-- Resolution: Added explicit file size validation before processing and surfaced a clear error message to the user.
-- Outcome: Prevented unnecessary API calls and improved predictability and UX.
+- **Issue:** Transcription requests failed for large audio files (≈50MB) with 400/500 errors.
+- **Root Cause:** External transcription provider enforces file size and duration limits.
+- **Resolution:** Added explicit file size validation before processing and surfaced a clear error message to the user.
+- **Outcome:** Prevented unnecessary API calls and improved predictability and UX.
 
 #### Invalid JSON Output Affecting Word Export
-- Issue: Word export occasionally failed due to malformed or incomplete summary data.
-- Root Cause: LLM-generated output is probabilistic and may not always match the expected schema.
-- Resolution: Enforced strict Pydantic validation and treated validated JSON as the single source of truth.
-- Outcome: Export became deterministic and reliable.
+- **Issue:** Word export occasionally failed due to malformed or incomplete summary data.
+- **Root Cause:** LLM-generated output is probabilistic and may not always match the expected schema.
+- **esolution:** Enforced strict Pydantic validation and treated validated JSON as the single source of truth.
+- **Outcome:** Export became deterministic and reliable.
 
 #### Handling Multi-line Transcripts in JSON Requests
-- Issue: Multi-line transcript inputs caused JSON parsing errors (HTTP 422 Unprocessable Content).
-- Root Cause: Raw newline characters in JSON payloads were not properly escaped, breaking request parsing.
-- Resolution: Required JSON-safe newline escaping (\n) for all multi-line transcript inputs.
-- Outcome: Ensured compatibility with FastAPI request parsing and API-based clients such as Swagger UI and curl.
+- **Issue:** Multi-line transcript inputs caused JSON parsing errors (HTTP 422 Unprocessable Content).
+- **Root Cause:** Raw newline characters in JSON payloads were not properly escaped, breaking request parsing.
+- **Resolution:** Required JSON-safe newline escaping (\n) for all multi-line transcript inputs.
+- **Outcome:** Ensured compatibility with FastAPI request parsing and API-based clients such as Swagger UI and curl.
+
+#### Limited Visibility During Long Audio Processing
+- **Issue:** Processing longer audio files could take a significant amount of time with no immediate visible feedback.
+- **Root Cause:** Transcription and summarization are synchronous and depend on external API latency.
+- **Resolution:** Added structured logging at each major pipeline step (file saving, transcription start/end, summarization start/end).
+- **Outcome:** Improved observability during long-running operations and increased confidence that the process is progressing as expected.
 
 These issues highlighted the importance of defensive validation, clear API contracts,
 and designing AI-integrated systems around deterministic boundaries.
