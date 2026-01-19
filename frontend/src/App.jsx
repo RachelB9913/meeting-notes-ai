@@ -51,7 +51,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [resultJson, setResultJson] = useState(null);
-  const [isCopyActive, setIsCopyActive] = useState(false);
+  const [activeButton, setActiveButton] = useState(null);
   const [exportLoading, setExportLoading] = useState(false);
 
   const fileMeta = useMemo(() => {
@@ -178,6 +178,32 @@ function App() {
     }
   }
 
+  const buttonBaseStyle = {
+    padding: "0.45rem 0.75rem",
+    borderRadius: 10,
+    border: "1px solid #ccc",
+    outline: "none",
+    cursor: "pointer",
+    background: "white",
+  };
+
+  function getButtonStyle(key, extra = {}) {
+    const isActive = activeButton === key;
+    return {
+      ...buttonBaseStyle,
+      border: isActive ? "2.5px solid #360cee" : buttonBaseStyle.border,
+      ...extra,
+    };
+  }
+
+  function bindPressEvents(key) {
+    return {
+      onMouseDown: () => setActiveButton(key),
+      onMouseUp: () => setActiveButton(null),
+      onMouseLeave: () => setActiveButton(null),
+    };
+  }
+
   return (
     <div style={{ maxWidth: 860, margin: "0 auto", padding: "2rem", fontFamily: "Arial" }}>
       <h1 style={{ marginTop: 0 }}>Meeting Transcription & Summarization</h1>
@@ -201,7 +227,8 @@ function App() {
             <button
               type="button"
               onClick={clearFile}
-              style={{ marginTop: "0.75rem", padding: "0.4rem 0.75rem", cursor: "pointer" }}
+              {...bindPressEvents("clear")}
+              style={getButtonStyle("clear", { marginTop: "0.75rem" })}
             >
               Clear
             </button>
@@ -257,7 +284,7 @@ function App() {
         </div>
 
         <div style={{ marginTop: "0.75rem", padding: "0.75rem", background: "#fafafa", borderRadius: 10 }}>
-          <div style={{ fontSize: 13, color: "#06aa4b" }}>
+          <div style={{ fontSize: 14, color: "#099414" }}>
             <strong>Current selection:</strong>{" "}
             llm_provider=<code>{llmProvider}</code>, output=<code>{outputFormat}</code>
           </div>
@@ -271,13 +298,12 @@ function App() {
           type="button"
           onClick={onProcessClick}
           disabled={!file || loading}
-          style={{
+          {...bindPressEvents("process")}
+          style={getButtonStyle("process", {
             padding: "0.6rem 1rem",
-            borderRadius: 10,
-            border: "1px solid #ccc",
             cursor: !file || loading ? "not-allowed" : "pointer",
             opacity: !file || loading ? 0.6 : 1,
-          }}
+          })}
         >
           {loading ? "Processing..." : "Process"}
         </button>
@@ -300,20 +326,9 @@ function App() {
             <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.5rem" }}>
               <button
                 type="button"
-                onMouseDown={() => setIsCopyActive(true)}
-                onMouseUp={() => setIsCopyActive(false)}
-                onMouseLeave={() => setIsCopyActive(false)}
-                onClick={() => {
-                  navigator.clipboard.writeText(JSON.stringify(resultJson, null, 2));
-                }}
-                style={{
-                  padding: "0.45rem 0.75rem",
-                  borderRadius: 10,
-                  border: isCopyActive ? "2px solid #130101" : "1px solid #ccc",
-                  outline: "none",
-                  cursor: "pointer",
-                  background: "white",
-                }}
+                onClick={() => navigator.clipboard.writeText(JSON.stringify(resultJson, null, 2))}
+                {...bindPressEvents("copy")}
+                style={getButtonStyle("copy")}
               >
                 Copy JSON
               </button>
@@ -322,13 +337,11 @@ function App() {
                 type="button"
                 onClick={onExportDocx}
                 disabled={exportLoading}
-                style={{
-                  padding: "0.45rem 0.75rem",
-                  borderRadius: 10,
-                  border: "1px solid #ccc",
+                {...bindPressEvents("export")}
+                style={getButtonStyle("export", {
                   cursor: exportLoading ? "not-allowed" : "pointer",
                   opacity: exportLoading ? 0.6 : 1,
-                }}
+                })}
               >
                 {exportLoading ? "Preparing Word..." : "Download Word (.docx)"}
               </button>
