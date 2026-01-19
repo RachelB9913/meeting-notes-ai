@@ -10,7 +10,7 @@ The goal of the assignment was to design and implement a meeting transcription a
 
 ## What the system does
 
-1. Accepts a meeting audio file (mp3 / wav / m4a)
+1. Accepts a meeting audio file (mp3 / wav)
 2. Transcribes it using OpenAI Whisper
 3. Generates a structured summary using an LLM (OpenAI or Claude)
 4. Returns either:
@@ -131,7 +131,7 @@ http://127.0.0.1:8000/docs
 A lightweight React frontend was implemented to demonstrate end-to-end system usage.
 
 The UI allows the user to:
-1. Upload an audio file (mp3 / wav / m4a)
+1. Upload an audio file (mp3 / wav)
 2. Select an LLM provider (OpenAI or Claude)
 3. Choose output format (JSON or Word)
 4. Run the full transcription + summarization pipeline

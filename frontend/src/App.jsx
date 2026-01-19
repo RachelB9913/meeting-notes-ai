@@ -255,7 +255,7 @@ function App() {
         <input
           id="audio-file-input"
           type="file"
-          accept=".mp3,.wav,.m4a,audio/mpeg,audio/wav,audio/mp4"
+          accept=".mp3,.wav"
           onChange={onFileChange}
           style={{ marginTop: 6 }}
         />
@@ -284,7 +284,7 @@ function App() {
           </div>
         ) : (
           <p style={{ marginTop: "0.75rem", color: "#666" }}>
-            Choose an audio file (mp3 / wav / m4a).
+            Choose an audio file (mp3 / wav).
           </p>
         )}
       </div>
