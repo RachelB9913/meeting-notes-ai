@@ -1,3 +1,8 @@
+This document was written iteratively:
+initial sections were drafted before implementation to outline the system design,
+while later sections were completed during and after development to accurately reflect
+decisions, issues encountered, and tradeoffs.
+
 ## Overview
 This project is a full-stack AI-powered system for meeting transcription and structured summarization.  
 
@@ -64,42 +69,162 @@ This was my first time using the `python-docx` library. I intentionally kept the
 ---
 
 ## Prompting Strategy
-> TBD: Define a system prompt
-- Several prompt styles were explored, including schema-first prompting and strict extraction rules. 
-The final prompt whill be chosen for its balance between clarity, robustness, and minimal hallucination, while maintaining a professional, human-readable tone.
-> TBD: Define the JSON schema for:
-- summary
-- participants (best-effort)
-- decisions
-- action_items
+
+Several system prompt variants were explored during development in order to balance
+output quality, hallucination prevention, and schema stability.
+
+The following approaches were tested:
+- Schema-first prompts focusing primarily on JSON structure
+- Step-by-step reasoning prompts
+- Strict prompts minimizing ambiguity
+- A guideline-based prompt with explicit instructions
+
+After experimentation, a guideline-based prompt (`SYSTEM_PROMPT_BASIC`) was selected as the final implementation.
+
+#### Final System Prompt
+```text
+SYSTEM_PROMPT_BASIC = """
+You are analyzing a meeting transcript and preparing a structured summary for internal documentation.
+
+Your task is to extract the key information from the transcript and organize it into a clear, structured format.
+
+Guidelines:
+- Base your output strictly on what is explicitly mentioned in the transcript.
+- Do not infer or assume information that is not stated.
+- If a participant, decision, or action item is unclear or missing, leave it empty or mark it as null.
+- Use concise, neutral language suitable for professional documentation.
+
+Return the result as a single JSON object with the following structure:
+{
+  "meeting_summary": string,
+  "participants": string[],
+  "decisions": string[],
+  "action_items": [
+    {
+      "task": string,
+      "owner": string | null,
+      "due_date": string | null,
+      "priority": "low" | "medium" | "high" | null
+    }
+  ]
+}
+
+Return ONLY valid JSON. Do not include explanations or formatting.
+"""
+```
+
+#### `SYSTEM_PROMPT_BASIC` was chosen because it:
+- Explicitly instructs the model not to infer or hallucinate missing information
+- Clearly defines how to handle incomplete data (null / empty fields)
+- Produces stable JSON outputs compatible with strict Pydantic validation
+- Works consistently across different LLM providers (OpenAI and Anthropic)
+- Avoids complex prompting techniques that reduce predictability
+
+While other prompt variants were considered, they either resulted in over-strict outputs
+(empty results) or introduced instability across providers.
+
+This decision reflects a preference for predictable, explainable behavior over maximum expressiveness, which is critical for production-oriented AI systems.
+
+> Additional prompt variants explored during development are preserved in the `meeting_summary_prompt.py` file for reference, although only a single prompt
+(`SYSTEM_PROMPT_BASIC`) is used in the final implementation.
 
 ---
 
 ## Using AI During Development
-> TBD: Document where AI tools were used (API usage, prompt iterations) + example prompts.
-- Used AI to generate diverse sample meeting transcripts (clean, mixed, and messy) in order to validate the robustness of the summarization prompts and structured output.
+AI tools were used selectively during development to accelerate design decisions,
+validate approaches, and iterate on prompt design.
+All final architectural and implementation decisions were made manually.
+
+### Example 1: Prompt Design Iteration
+AI assistance was used to explore different prompt formulations for meeting summarization.
+An early prompt version focused primarily on producing structured output, but resulted in
+overly verbose responses and occasional hallucinated details when information was missing.
+
+A refinement step introduced explicit instructions to:
+- Avoid inferring missing information
+- Use null or empty fields when data is unavailable
+- Maintain a professional, documentation-oriented tone
+
+This iteration led to the final guideline-based system prompt
+(`SYSTEM_PROMPT_BASIC`), which balanced output quality and predictability.
+The prompt was tested against both OpenAI and Anthropic models to ensure consistent behavior.
+
+### Example 2: Project Scaffolding and Tooling
+AI assistance was used at the very beginning of the project to generate a basic `.gitignore`
+appropriate for Python environments.
+
+From that point onward, the file was manually maintained and adjusted as the project evolved,
+ensuring that only relevant artifacts were excluded from version control.
+
+
+### Example 3: Frontend UX and Flow
+AI assistance was used primarily as a navigation and templating help during frontend development,
+rather than for core decision-making.
+
+The overall UX flow and component structure were designed manually,
+while AI tools were used to:
+- Refine UI wording and labels
+- Suggest small layout improvements
+- Help iterate on repetitive JSX and style patterns
+
+All UX decisions (such as separation between processing and export actions, loading states, and error visibility) were made explicitly, with AI serving only to streamline implementation and reduce friction.
+
+### Use of Code Completion Tools
+Code completion tools (e.g. GitHub Copilot) were occasionally used to scaffold initial file structures or generate repetitive boilerplate code.
+
+Their usage was intentionally kept minimal.
+Core logic, data flow, validation, and architectural decisions were implemented manually to ensure full understanding and ownership of the codebase.
+
+
+> Overall, AI tools were used to accelerate iteration and reduce boilerplate, while all architectural decisions, validation logic, and system boundaries were defined and implemented manually.
 
 ---
 
 ## Issues & Resolutions
-> TBD: Track issues encountered and resolutions.
-- Handling multi-line transcripts in JSON requests:
-  Multi-line transcript inputs initially caused JSON parsing errors (422 Unprocessable Content). This was resolved by requiring JSON-safe newline escaping (`\n`) for all multi-line transcript inputs, ensuring compatibility with FastAPI request parsing and API-based clients such as Swagger and curl.
+Here are some of the issues encountered during development:
+
+#### Large Audio Files Causing Transcription Failures
+- Issue: Transcription requests failed for large audio files (≈50MB) with 400/500 errors.
+- Root Cause: External transcription provider enforces file size and duration limits.
+- Resolution: Added explicit file size validation before processing and surfaced a clear error message to the user.
+- Outcome: Prevented unnecessary API calls and improved predictability and UX.
+
+#### Invalid JSON Output Affecting Word Export
+- Issue: Word export occasionally failed due to malformed or incomplete summary data.
+- Root Cause: LLM-generated output is probabilistic and may not always match the expected schema.
+- Resolution: Enforced strict Pydantic validation and treated validated JSON as the single source of truth.
+- Outcome: Export became deterministic and reliable.
+
+#### Handling Multi-line Transcripts in JSON Requests
+- Issue: Multi-line transcript inputs caused JSON parsing errors (HTTP 422 Unprocessable Content).
+- Root Cause: Raw newline characters in JSON payloads were not properly escaped, breaking request parsing.
+- Resolution: Required JSON-safe newline escaping (\n) for all multi-line transcript inputs.
+- Outcome: Ensured compatibility with FastAPI request parsing and API-based clients such as Swagger UI and curl.
+
+These issues highlighted the importance of defensive validation, clear API contracts,
+and designing AI-integrated systems around deterministic boundaries.
+
 ---
 
 ## Time Spent
-- Planning and design: ~50 min
-- Backend development: TBD
-- Frontend development: TBD
-- Documentation and polishing: TBD
+The development was performed iteratively over multiple sessions rather than in a single continuous block.
+As a result, the time estimates below are approximate and reflect active development time only.
 
-- Total time: 
+- Planning and design: ~50 minutes  
+- Backend development: ~3 hours
+- Frontend development: ~1.5 hours
+- Documentation and polishing: ~1 hour
+
+**Total active development time:** ~6 hours 
 
 ---
 
-## Tradeoffs & Future Improvements
-> TBD: Note intentional scope cuts (no diarization, no DB, minimal UI) + possible next steps.
-- Whisper transcription relies on the OpenAI API and requires active billing.
-  During development, API quota limitations may result in 429 errors.
-  The system handles this gracefully by returning a clear 503 response.
-  End-to-end testing with real transcripts can be enabled later by activating billing.
+## Tradeoffs
+- The system relies on external transcription services (OpenAI Whisper) and therefore requires active API billing.
+- Speaker diarization, persistent storage, authentication, and background job processing were intentionally excluded to keep the scope focused.
+- The frontend UI was kept minimal to emphasize system behavior rather than visual design.
+
+During development, API quota limitations may result in transient errors (e.g. HTTP 429).
+These are handled gracefully by returning a clear 503 response to the client.
+
+> Future extensions and enhancements are documented separately in the main README.
