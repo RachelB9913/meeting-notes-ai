@@ -14,6 +14,8 @@ function formatBytes(bytes) {
 
 function App() {
   const [file, setFile] = useState(null);
+  const [llmProvider, setLlmProvider] = useState("openai");
+  const [outputFormat, setOutputFormat] = useState("json");
 
   const fileMeta = useMemo(() => {
     if (!file) return null;
@@ -69,6 +71,57 @@ function App() {
             Choose an audio file (mp3 / wav / m4a).
           </p>
         )}
+      </div>
+
+      <div style={{ marginTop: "1rem", border: "1px solid #ddd", borderRadius: 12, padding: "1rem" }}>
+        <h2 style={{ marginTop: 0, fontSize: 18 }}>2) Options</h2>
+
+        <div style={{ display: "grid", gap: "0.75rem", gridTemplateColumns: "1fr 1fr" }}>
+          <label style={{ display: "grid", gap: "0.35rem" }}>
+            <span style={{ fontWeight: 600 }}>LLM Provider</span>
+            <select
+              value={llmProvider}
+              onChange={(e) => setLlmProvider(e.target.value)}
+              style={{ padding: "0.45rem", borderRadius: 8, border: "1px solid #ccc" }}
+            >
+              <option value="openai">OpenAI</option>
+              <option value="claude">Claude (Anthropic)</option>
+            </select>
+          </label>
+
+          <div style={{ display: "grid", gap: "0.35rem" }}>
+            <span style={{ fontWeight: 600 }}>Output format</span>
+
+            <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <input
+                type="radio"
+                name="output"
+                value="json"
+                checked={outputFormat === "json"}
+                onChange={(e) => setOutputFormat(e.target.value)}
+              />
+              JSON (show on screen)
+            </label>
+
+            <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <input
+                type="radio"
+                name="output"
+                value="docx"
+                checked={outputFormat === "docx"}
+                onChange={(e) => setOutputFormat(e.target.value)}
+              />
+              Word (.docx) download
+            </label>
+          </div>
+        </div>
+
+        <div style={{ marginTop: "0.75rem", padding: "0.75rem", background: "#fafafa", borderRadius: 10 }}>
+          <div style={{ fontSize: 13, color: "#444" }}>
+            <strong>Current selection:</strong>{" "}
+            llm_provider=<code>{llmProvider}</code>, output=<code>{outputFormat}</code>
+          </div>
+        </div>
       </div>
     </div>
   );
