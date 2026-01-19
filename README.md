@@ -155,6 +155,12 @@ The UI allows the user to:
 
 The system consists of a backend API and a frontend UI, which should be run in parallel.
 
+> To run the system end-to-end, valid API keys for the selected LLM provider
+(OpenAI and/or Anthropic) are required.
+> API keys should be provided via environment variables and are not included
+in this repository for security reasons.
+> If API keys are not provided, the system will still start, but transcription and summarization requests will fail gracefully.
+
 1. Start the backend (Terminal 1):
 From the project root:
 ```
