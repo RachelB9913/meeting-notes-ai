@@ -53,6 +53,7 @@ function App() {
   const [resultJson, setResultJson] = useState(null);
   const [activeButton, setActiveButton] = useState(null);
   const [exportLoading, setExportLoading] = useState(false);
+  const [hoverButton, setHoverButton] = useState(null);
 
   const fileMeta = useMemo(() => {
     if (!file) return null;
@@ -68,9 +69,12 @@ function App() {
     setFile(picked);
   }
 
-  function clearFile() {
+  function clearFile() { // clear selected file and reset state
     setFile(null);
-    // reset the input value so selecting the same file again triggers onChange
+    setResultJson(null);
+    setError("");
+    setExportLoading(false);
+
     const input = document.getElementById("audio-file-input");
     if (input) input.value = "";
   }
@@ -187,11 +191,23 @@ function App() {
     background: "white",
   };
 
+  const cardStyle = {
+    border: "1px solid #e6e8ef",
+    borderRadius: 16,
+    padding: "1.1rem",
+    background: "white",
+    boxShadow: "0 10px 28px rgba(15, 23, 42, 0.06)",
+  };
+
   function getButtonStyle(key, extra = {}) {
     const isActive = activeButton === key;
+    const isHover = hoverButton === key;
+
     return {
       ...buttonBaseStyle,
-      border: isActive ? "2.5px solid #360cee" : buttonBaseStyle.border,
+      border: isActive ? "2.5px solid #360cee" : "1px solid #cccccc",
+      background: isHover ? "#dee8ff" : buttonBaseStyle.background,
+      transition: "all 0.15s ease",
       ...extra,
     };
   }
@@ -200,22 +216,45 @@ function App() {
     return {
       onMouseDown: () => setActiveButton(key),
       onMouseUp: () => setActiveButton(null),
-      onMouseLeave: () => setActiveButton(null),
+      onMouseLeave: () => {
+        setActiveButton(null);
+        setHoverButton(null);
+      },
+      onMouseEnter: () => setHoverButton(key),
     };
   }
 
   return (
-    <div style={{ maxWidth: 860, margin: "0 auto", padding: "2rem", fontFamily: "Arial" }}>
-      <h1 style={{ marginTop: 0 }}>Meeting Transcription & Summarization</h1>
+  <div
+    style={{
+      minHeight: "100vh",
+      background: "#f6f7fb",
+      padding: "2.5rem 1rem",
+      fontFamily: "Inter, system-ui, Arial",
+    }}
+  >
+    <div style={{ maxWidth: 720, margin: "0 auto" }}>
+      {/* Header */}
+      <div style={{ marginBottom: "1.25rem" }}>
+        <h1 style={{ margin: 0, fontSize: 34, color: "#0c2663" }}>
+          Meeting Transcription & Summarization
+        </h1>
+        <p style={{ margin: "0.35rem 0 0", color: "#555", fontSize: 16 }}>
+          End-to-end AI system for audio transcription and structured meeting summaries
+        </p>
+      </div>
 
-      <div style={{ border: "1px solid #ddd", borderRadius: 12, padding: "1rem" }}>
-        <h2 style={{ marginTop: 0, fontSize: 18 }}>1) Upload audio</h2>
+      {/* Card 1: Upload */}
+      <div style={cardStyle}>
+        <h2 style={{ margin: 0, fontSize: 16, color: "#111" }}>1) Upload audio</h2>
+        <div style={{ height: 12 }} />
 
         <input
           id="audio-file-input"
           type="file"
           accept=".mp3,.wav,.m4a,audio/mpeg,audio/wav,audio/mp4"
           onChange={onFileChange}
+          style={{ marginTop: 6 }}
         />
 
         {fileMeta ? (
@@ -240,8 +279,10 @@ function App() {
         )}
       </div>
 
-      <div style={{ marginTop: "1rem", border: "1px solid #ddd", borderRadius: 12, padding: "1rem" }}>
-        <h2 style={{ marginTop: 0, fontSize: 18 }}>2) Options</h2>
+      {/* Card 2: Options */}
+      <div style={{ ...cardStyle, marginTop: "1rem" }}>
+        <h2 style={{ margin: 0, fontSize: 16, color: "#111" }}>2) Options</h2>
+        <div style={{ height: 12 }} />
 
         <div style={{ display: "grid", gap: "0.75rem", gridTemplateColumns: "1fr 1fr" }}>
           <label style={{ display: "grid", gap: "0.35rem" }}>
@@ -284,15 +325,17 @@ function App() {
         </div>
 
         <div style={{ marginTop: "0.75rem", padding: "0.75rem", background: "#fafafa", borderRadius: 10 }}>
-          <div style={{ fontSize: 14, color: "#099414" }}>
+          <div style={{ fontSize: 14, color: "#076304" }}>
             <strong>Current selection:</strong>{" "}
             llm_provider=<code>{llmProvider}</code>, output=<code>{outputFormat}</code>
           </div>
         </div>
       </div>
-    
-      <div style={{ marginTop: "1rem", border: "1px solid #ddd", borderRadius: 12, padding: "1rem" }}>
-        <h2 style={{ marginTop: 0, fontSize: 18 }}>3) Run</h2>
+
+      {/* Card 3: Run */}
+      <div style={{ ...cardStyle, marginTop: "1rem" }}>
+        <h2 style={{ margin: 0, fontSize: 16, color: "#111" }}>3) Run</h2>
+        <div style={{ height: 12 }} />
 
         <button
           type="button"
@@ -300,16 +343,29 @@ function App() {
           disabled={!file || loading}
           {...bindPressEvents("process")}
           style={getButtonStyle("process", {
-            padding: "0.6rem 1rem",
+            padding: "0.6rem 1.1rem",
+            background: !file || loading
+              ? "#f1f5f9"
+              : hoverButton === "process"
+                ? "#1e293b"
+                : "#0f172a",
+            color: !file || loading ? "#999" : "white",
+            border: "none",
             cursor: !file || loading ? "not-allowed" : "pointer",
             opacity: !file || loading ? 0.6 : 1,
           })}
         >
           {loading ? "Processing..." : "Process"}
+          {loading ? (
+            <div style={{ marginTop: "0.75rem", color: "#555", fontSize: 14 }}>
+              This can take a short while depending on audio length.<br />
+              Please be patient.
+            </div>
+          ) : null}
         </button>
 
         {!file ? (
-          <p style={{ marginTop: "0.75rem", color: "#f13434" }}>
+          <p style={{ marginTop: "0.75rem", color: "#b00020" }}>
             Please upload an audio file first.
           </p>
         ) : null}
@@ -323,7 +379,8 @@ function App() {
         {resultJson ? (
           <div style={{ marginTop: "0.75rem" }}>
             <h3 style={{ marginBottom: "0.5rem", fontSize: 16 }}>Result</h3>
-            <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.5rem" }}>
+
+            <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.5rem", flexWrap: "wrap" }}>
               <button
                 type="button"
                 onClick={() => navigator.clipboard.writeText(JSON.stringify(resultJson, null, 2))}
@@ -346,6 +403,7 @@ function App() {
                 {exportLoading ? "Preparing Word..." : "Download Word (.docx)"}
               </button>
             </div>
+
             <pre
               style={{
                 margin: 0,
@@ -357,13 +415,14 @@ function App() {
                 fontSize: 12,
               }}
             >
-  {JSON.stringify(resultJson, null, 2)}
-              </pre>
-            </div>
-          ) : null}
-        </div>
+{JSON.stringify(resultJson, null, 2)}
+            </pre>
+          </div>
+        ) : null}
+      </div>
     </div>
-  );
+  </div>
+);
 }
 
 export default App;
