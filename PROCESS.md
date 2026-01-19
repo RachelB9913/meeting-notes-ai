@@ -135,7 +135,15 @@ AI tools were used selectively during development to accelerate design decisions
 validate approaches, and iterate on prompt design.
 All final architectural and implementation decisions were made manually.
 
-### Example 1: Prompt Design Iteration
+### Example 1: Isolated Testing of the Summarization Endpoint
+AI assistance was used to generate realistic sample transcripts that simulate
+meeting-like conversations and structures.
+
+These AI-generated samples were used to test the summarization endpoint in isolation,
+allowing iterative refinement of prompt structure and output validation
+without repeatedly invoking the transcription stage or external APIs.
+
+### Example 2: Prompt Design Iteration
 AI assistance was used to explore different prompt formulations for meeting summarization.
 An early prompt version focused primarily on producing structured output, but resulted in
 overly verbose responses and occasional hallucinated details when information was missing.
@@ -149,7 +157,7 @@ This iteration led to the final guideline-based system prompt
 (`SYSTEM_PROMPT_BASIC`), which balanced output quality and predictability.
 The prompt was tested against both OpenAI and Anthropic models to ensure consistent behavior.
 
-### Example 2: Project Scaffolding and Tooling
+### Example 3: Project Scaffolding and Tooling
 AI assistance was used at the very beginning of the project to generate a basic `.gitignore`
 appropriate for Python environments.
 
@@ -157,7 +165,7 @@ From that point onward, the file was manually maintained and adjusted as the pro
 ensuring that only relevant artifacts were excluded from version control.
 
 
-### Example 3: Frontend UX and Flow
+### Example 4: Frontend UX and Flow
 AI assistance was used primarily as a navigation and templating help during frontend development,
 rather than for core decision-making.
 
