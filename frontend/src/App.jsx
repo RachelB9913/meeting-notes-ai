@@ -16,6 +16,9 @@ function App() {
   const [file, setFile] = useState(null);
   const [llmProvider, setLlmProvider] = useState("openai");
   const [outputFormat, setOutputFormat] = useState("json");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [resultJson, setResultJson] = useState(null);
 
   const fileMeta = useMemo(() => {
     if (!file) return null;
@@ -36,6 +39,39 @@ function App() {
     // reset the input value so selecting the same file again triggers onChange
     const input = document.getElementById("audio-file-input");
     if (input) input.value = "";
+  }
+
+  async function onProcessClick() {
+    if (!file) return;
+
+    setLoading(true);
+    setError("");
+    setResultJson(null);
+
+    try {
+      // TEMP: simulate a short request so we can test loading + result UI
+      await new Promise((resolve) => setTimeout(resolve, 600));
+
+      if (outputFormat === "json") {
+        setResultJson({
+          status: "ok",
+          message: "UI is ready. Next step will call the backend /process endpoint.",
+          selected: { llm_provider: llmProvider, output: outputFormat },
+          file: { name: file.name, sizeBytes: file.size, type: file.type || "unknown" },
+        });
+      } else {
+        // For docx, we'll implement real download in the next step (API integration)
+        setResultJson({
+          status: "ok",
+          message: "DOCX selected. Next step will trigger a file download from backend.",
+          selected: { llm_provider: llmProvider, output: outputFormat },
+        });
+      }
+    } catch (e) {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -123,6 +159,56 @@ function App() {
           </div>
         </div>
       </div>
+    
+      <div style={{ marginTop: "1rem", border: "1px solid #ddd", borderRadius: 12, padding: "1rem" }}>
+        <h2 style={{ marginTop: 0, fontSize: 18 }}>3) Run</h2>
+
+        <button
+          type="button"
+          onClick={onProcessClick}
+          disabled={!file || loading}
+          style={{
+            padding: "0.6rem 1rem",
+            borderRadius: 10,
+            border: "1px solid #ccc",
+            cursor: !file || loading ? "not-allowed" : "pointer",
+            opacity: !file || loading ? 0.6 : 1,
+          }}
+        >
+          {loading ? "Processing..." : "Process"}
+        </button>
+
+        {!file ? (
+          <p style={{ marginTop: "0.75rem", color: "#666" }}>
+            Please upload an audio file first.
+          </p>
+        ) : null}
+
+        {error ? (
+          <div style={{ marginTop: "0.75rem", padding: "0.75rem", background: "#fff5f5", borderRadius: 10 }}>
+            <strong style={{ color: "#b00020" }}>Error:</strong> {error}
+          </div>
+        ) : null}
+
+        {resultJson ? (
+          <div style={{ marginTop: "0.75rem" }}>
+            <h3 style={{ marginBottom: "0.5rem", fontSize: 16 }}>Result</h3>
+            <pre
+              style={{
+                margin: 0,
+                padding: "0.75rem",
+                background: "#0b1020",
+                color: "white",
+                borderRadius: 10,
+                overflowX: "auto",
+                fontSize: 12,
+              }}
+            >
+  {JSON.stringify(resultJson, null, 2)}
+              </pre>
+            </div>
+          ) : null}
+        </div>
     </div>
   );
 }
