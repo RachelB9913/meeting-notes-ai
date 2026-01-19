@@ -1,5 +1,37 @@
 import { useMemo, useState } from "react";
 
+function getApiBaseUrl() {
+  const base = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
+  return base.replace(/\/$/, "");
+}
+
+function parseFilenameFromContentDisposition(headerValue) {
+  if (!headerValue) return null;
+
+  // Examples:
+  // attachment; filename="summary.docx"
+  // attachment; filename=summary.docx
+  const match = headerValue.match(/filename\*?=(?:UTF-8''|")?([^\";]+)\"?/i);
+  if (!match) return null;
+
+  try {
+    return decodeURIComponent(match[1]);
+  } catch {
+    return match[1];
+  }
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename || "summary.docx";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 function formatBytes(bytes) {
   if (!bytes && bytes !== 0) return "";
   const units = ["B", "KB", "MB", "GB"];
@@ -19,6 +51,8 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [resultJson, setResultJson] = useState(null);
+  const [isCopyActive, setIsCopyActive] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
 
   const fileMeta = useMemo(() => {
     if (!file) return null;
@@ -49,28 +83,98 @@ function App() {
     setResultJson(null);
 
     try {
-      // TEMP: simulate a short request so we can test loading + result UI
-      await new Promise((resolve) => setTimeout(resolve, 600));
+      const baseUrl = getApiBaseUrl();
+      const url = new URL(`${baseUrl}/process`);
+      url.searchParams.set("llm_provider", llmProvider);
+      url.searchParams.set("output", outputFormat);
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch(url.toString(), {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        // try to get error message from response body
+        let bodyText = "";
+        try {
+          bodyText = await res.text();
+        } catch {
+          bodyText = "";
+        }
+        const msg = bodyText ? `HTTP ${res.status}: ${bodyText}` : `HTTP ${res.status}: Request failed`;
+        throw new Error(msg);
+      }
 
       if (outputFormat === "json") {
-        setResultJson({
-          status: "ok",
-          message: "UI is ready. Next step will call the backend /process endpoint.",
-          selected: { llm_provider: llmProvider, output: outputFormat },
-          file: { name: file.name, sizeBytes: file.size, type: file.type || "unknown" },
-        });
-      } else {
-        // For docx, we'll implement real download in the next step (API integration)
-        setResultJson({
-          status: "ok",
-          message: "DOCX selected. Next step will trigger a file download from backend.",
-          selected: { llm_provider: llmProvider, output: outputFormat },
-        });
+        const data = await res.json();
+        setResultJson(data);
+        return;
       }
+
+      // outputFormat === "docx"
+      const blob = await res.blob();
+      const cd = res.headers.get("content-disposition");
+      const filename = parseFilenameFromContentDisposition(cd) || "meeting-summary.docx";
+      downloadBlob(blob, filename);
+
+      setResultJson({
+        status: "ok",
+        message: "DOCX downloaded successfully.",
+        selected: { llm_provider: llmProvider, output: outputFormat },
+      });
     } catch (e) {
-      setError("Something went wrong. Please try again.");
+      const message = e && e.message ? e.message : "Something went wrong. Please try again.";
+      setError(message);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function onExportDocx() {
+    if (!resultJson) return;
+
+    setExportLoading(true);
+    setError("");
+
+    try {
+      const baseUrl = getApiBaseUrl();
+      const url = new URL(`${baseUrl}/export/docx`);
+
+      // optional query params supported by backend
+      if (file && file.name) url.searchParams.set("original_filename", file.name);
+      if (llmProvider) url.searchParams.set("llm_provider", llmProvider);
+
+      const summaryOnly = resultJson?.summary ?? resultJson;
+
+      const res = await fetch(url.toString(), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(summaryOnly),
+      });
+
+      if (!res.ok) {
+        let bodyText = "";
+        try {
+          bodyText = await res.text();
+        } catch {
+          bodyText = "";
+        }
+        const msg = bodyText ? `HTTP ${res.status}: ${bodyText}` : `HTTP ${res.status}: export failed`;
+        throw new Error(msg);
+      }
+
+      const blob = await res.blob();
+      const cd = res.headers.get("content-disposition");
+      const filename = parseFilenameFromContentDisposition(cd) || "meeting-notes.docx";
+      downloadBlob(blob, filename);
+    } catch (e) {
+      const message = e && e.message ? e.message : "Export failed. Please try again.";
+      setError(message);
+    } finally {
+      setExportLoading(false);
     }
   }
 
@@ -153,7 +257,7 @@ function App() {
         </div>
 
         <div style={{ marginTop: "0.75rem", padding: "0.75rem", background: "#fafafa", borderRadius: 10 }}>
-          <div style={{ fontSize: 13, color: "#444" }}>
+          <div style={{ fontSize: 13, color: "#06aa4b" }}>
             <strong>Current selection:</strong>{" "}
             llm_provider=<code>{llmProvider}</code>, output=<code>{outputFormat}</code>
           </div>
@@ -179,7 +283,7 @@ function App() {
         </button>
 
         {!file ? (
-          <p style={{ marginTop: "0.75rem", color: "#666" }}>
+          <p style={{ marginTop: "0.75rem", color: "#f13434" }}>
             Please upload an audio file first.
           </p>
         ) : null}
@@ -193,6 +297,42 @@ function App() {
         {resultJson ? (
           <div style={{ marginTop: "0.75rem" }}>
             <h3 style={{ marginBottom: "0.5rem", fontSize: 16 }}>Result</h3>
+            <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.5rem" }}>
+              <button
+                type="button"
+                onMouseDown={() => setIsCopyActive(true)}
+                onMouseUp={() => setIsCopyActive(false)}
+                onMouseLeave={() => setIsCopyActive(false)}
+                onClick={() => {
+                  navigator.clipboard.writeText(JSON.stringify(resultJson, null, 2));
+                }}
+                style={{
+                  padding: "0.45rem 0.75rem",
+                  borderRadius: 10,
+                  border: isCopyActive ? "2px solid #130101" : "1px solid #ccc",
+                  outline: "none",
+                  cursor: "pointer",
+                  background: "white",
+                }}
+              >
+                Copy JSON
+              </button>
+
+              <button
+                type="button"
+                onClick={onExportDocx}
+                disabled={exportLoading}
+                style={{
+                  padding: "0.45rem 0.75rem",
+                  borderRadius: 10,
+                  border: "1px solid #ccc",
+                  cursor: exportLoading ? "not-allowed" : "pointer",
+                  opacity: exportLoading ? 0.6 : 1,
+                }}
+              >
+                {exportLoading ? "Preparing Word..." : "Download Word (.docx)"}
+              </button>
+            </div>
             <pre
               style={{
                 margin: 0,
