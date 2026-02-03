@@ -6,6 +6,11 @@ from fastapi import APIRouter, UploadFile, File, HTTPException
 from app.config import UPLOAD_DIR, ALLOWED_EXTENSIONS
 from app.services.whisper_service import transcribe_with_whisper
 
+"""
+this route handles audio file uploads and transcription using Whisper.
+It validates the uploaded file's name and extension, saves it to the server,
+and returns the transcription result.
+"""
 router = APIRouter()
 
 @router.post("/transcribe")

@@ -5,8 +5,13 @@ from app.schemas.meeting_summary import MeetingSummary
 from app.services.openai_summary_service import summarize_transcript_with_openai
 from app.services.claude_summary_service import summarize_transcript_with_claude
 
-router = APIRouter()
+"""
+this route handles summarization of transcripts using LLMs.
+It accepts a transcript in the request body and returns a structured summary.
+- It supports two LLM providers: OpenAI and Claude.
+"""
 
+router = APIRouter()
 
 class SummarizeRequest(BaseModel):
     transcript: str

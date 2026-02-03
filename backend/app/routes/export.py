@@ -8,6 +8,12 @@ from fastapi.responses import StreamingResponse
 from app.schemas.meeting_summary import MeetingSummary
 from app.services.word_export_service import build_docx_from_summary, WordExportMetadata
 
+"""
+this route handles exporting meeting summaries to Word documents.
+It accepts a MeetingSummary object and optional metadata, generates a .docx file,
+and returns it as a downloadable response.
+"""
+
 router = APIRouter(prefix="/export", tags=["export"])
 
 @router.post("/docx")

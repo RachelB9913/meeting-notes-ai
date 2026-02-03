@@ -3,9 +3,12 @@ from __future__ import annotations
 from typing import List, Optional, Literal
 from pydantic import BaseModel, Field
 
+"""
+This file defines the MeetingSummary schema used for structured meeting summaries.
+It includes fields for overall summary, participants, decisions, and action items.
+"""
 
 Priority = Literal["low", "medium", "high"]
-
 
 class ActionItem(BaseModel):
     task: str = Field(..., min_length=1, description="Action item description")

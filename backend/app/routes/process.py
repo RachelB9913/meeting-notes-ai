@@ -16,6 +16,14 @@ from app.services.openai_summary_service import summarize_transcript_with_openai
 from app.services.claude_summary_service import summarize_transcript_with_claude
 from app.services.word_export_service import build_docx_from_summary, WordExportMetadata
 
+"""
+this route handles the complete process of uploading an audio file,
+transcribing it, summarizing the transcript using a chosen LLM provider,
+and returning either a JSON response or a Word document.
+It validates the uploaded file's size, name, and extension, manages the workflow,
+and handles errors appropriately.
+"""
+
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
